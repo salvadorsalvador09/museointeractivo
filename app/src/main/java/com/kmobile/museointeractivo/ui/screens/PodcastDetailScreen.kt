@@ -29,6 +29,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.sp
 import com.kmobile.museointeractivo.ui.components.PodcastPlayerCard
@@ -72,6 +75,7 @@ fun PodcastDetailScreen(
                 )
             }
 
+
             is DetailState.Error -> {
                 ErrorStateCard(
                     message = state.message ?: "Ocurrió un error",
@@ -101,10 +105,15 @@ fun PodcastDetailScreen(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
+                    var viewUrl by remember{ mutableStateOf<String?>(null) }
+
                     GenericHeroHeader(
                         title = feed.title ?: "Sin título",
                         imageUrl = feed.image,
-                        subtitle = feed.datePublishedPretty
+                        subtitle = feed.datePublishedPretty,
+                        onImageClick = {url ->
+                            viewUrl = url
+                        }
                     )
 
                     ElevatedCard(

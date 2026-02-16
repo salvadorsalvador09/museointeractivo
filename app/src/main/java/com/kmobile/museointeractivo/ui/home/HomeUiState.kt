@@ -9,9 +9,10 @@ data class HomeUiState(
     val selectedTab: HomeTab = HomeTab.ART,
     val loading: Boolean = false,
     val error: String? = null,
-    val podcasts: List<EpisodeDto> = emptyList(),
-    val videos: List<VideoDto> = emptyList(),
-    val articles: List<ArticleDto> = emptyList(),
+
+    val podcastsByTab: Map<HomeTab, List<EpisodeDto>> = emptyMap(),
+    val videosByTab: Map<HomeTab, List<VideoDto>> = emptyMap(),
+    val articlesByTab: Map<HomeTab, List<ArticleDto>> = emptyMap()
 )
 
 enum class HomeTab(val category: String) {

@@ -1,7 +1,9 @@
 package com.kmobile.museointeractivo.ui.components
 
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,18 +18,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import android.util.Log
+import androidx.media3.common.util.UnstableApi
 import com.kmobile.museointeractivo.data.remote.articles.ArticleDto
 import com.kmobile.museointeractivo.ui.theme.DeepGold
-import com.kmobile.museointeractivo.ui.theme.Desert
 import com.kmobile.museointeractivo.ui.theme.Ink
 import com.kmobile.museointeractivo.ui.theme.Nile
 import com.kmobile.museointeractivo.ui.theme.Papyrus
 
+@OptIn(UnstableApi::class)
 @Composable
 fun ArticleCard(
     article: ArticleDto,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    onImageClick: (String?) -> Unit,
 ) {
     val shape = RoundedCornerShape(18.dp)
 
@@ -41,10 +46,8 @@ fun ArticleCard(
                 color = DeepGold.copy(alpha = 0.55f),
                 shape = shape
             ),
-        colors = CardDefaults.cardColors(
-            containerColor = Papyrus
-        ),
-        onClick = { onClick?.invoke() }
+        colors = CardDefaults.cardColors(containerColor = Papyrus),
+        //onClick = { onClick?.invoke() }
     ) {
         Column(
             modifier = Modifier
@@ -52,13 +55,21 @@ fun ArticleCard(
                 .clip(RoundedCornerShape(16.dp))
                 .background(Papyrus)
                 .padding(10.dp)
+                .clickable {
+                    Log.d("IMG", "FORCED click on header area")
+                    onImageClick(article.primaryImageSmall)
+                }
         ) {
-
             GenericHeroHeader(
                 title = article.title ?: "Sin título",
                 imageUrl = article.primaryImageSmall,
-                subtitle = article.artistDisplayName ?: "Sin subtítulo"
+                subtitle = article.artistDisplayName ?: "Sin subtítulo",
+                onImageClick = { url ->
+                    Log.d("IMG-tap", "ArticleCard image click url=$url  primary=${article.primaryImage} small=${article.primaryImageSmall}")
+                    onImageClick(url)
+                }
             )
+
             Text(
                 text = article.title ?: "Sin título",
                 style = MaterialTheme.typography.titleMedium

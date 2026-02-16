@@ -28,6 +28,7 @@ fun VideoCard(
     video: VideoDto,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
+    onImageClick: (String?) -> Unit
 ) {
     val shape = RoundedCornerShape(18.dp)
 
@@ -62,10 +63,14 @@ fun VideoCard(
                     .background(Desert.copy(alpha = 0.35f))
                     .padding(10.dp)
             ) {
+
                 GenericHeroHeader(
                     title = video.user.name ?: "Sin título",
                     imageUrl = video.image,
-                    subtitle = video.user.name ?: "Sin subtítulo"
+                    subtitle = video.user.name ?: "Sin subtítulo",
+                    onImageClick = { url ->
+                        onImageClick.invoke(url)
+                    }
                 )
             }
 

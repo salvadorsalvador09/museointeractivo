@@ -13,6 +13,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -26,7 +30,8 @@ import com.kmobile.museointeractivo.ui.theme.Papyrus
 fun PodcastCard(
     feed: EpisodeDto,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onImageClick: (String?) -> Unit
 ) {
     val shape = RoundedCornerShape(18.dp)
     Card(
@@ -44,6 +49,7 @@ fun PodcastCard(
         ),
         onClick = { onClick?.invoke() }
     ) {
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -54,8 +60,12 @@ fun PodcastCard(
             GenericHeroHeader(
                 title = feed.title ?: "Sin título",
                 imageUrl = feed.image,
-                subtitle = feed.datePublishedPretty
+                subtitle = feed.datePublishedPretty,
+                onImageClick = onImageClick
             )
+
+
+
 
             if (!feed.datePublishedPretty.isNullOrBlank()) {
                 Spacer(Modifier.height(4.dp))

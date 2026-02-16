@@ -3,7 +3,6 @@ package com.kmobile.museointeractivo.ui.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.kmobile.museointeractivo.data.repository.ArticleRepository
 import com.kmobile.museointeractivo.data.repository.PodcastRepository
 import com.kmobile.museointeractivo.data.repository.VideoRepository
@@ -27,38 +26,45 @@ class HomeViewModel(
 
     private var tabJob: Job? = null
 
-    fun onTabSelected(tab: HomeTab) {
+
+
+    init {
+        onTabSelected(HomeTab.ART)
+    }
+
+    fun onTabSelected(tab: HomeTab, force: Boolean = false) {
+        val current = _uiState.value
+
+        val alreadyLoaded =
+            current.podcastsByTab[tab]?.isNotEmpty() == true ||
+                    current.videosByTab[tab]?.isNotEmpty() == true ||
+                    current.articlesByTab[tab]?.isNotEmpty() == true
+
+        if (!force && current.selectedTab == tab && alreadyLoaded) {
+            return
+        }
+
         tabJob?.cancel()
 
+        // Cambias tab inmediatamente
         _uiState.update {
             it.copy(
                 selectedTab = tab,
-                loading = true,
-                error = null,
-                podcasts = emptyList(),
-                videos = emptyList(),
-                articles = emptyList()
+                loading = !alreadyLoaded, // si ya hay cache, no pongas loading
+                error = null
             )
         }
 
+        // Si ya estaba cargado, no vuelvas a pedir
+        if (alreadyLoaded && !force) return
+
         tabJob = viewModelScope.launch {
             val category = tab.category
-            Log.d("HomeViewModel", "onTabSelected: $category")
+
             coroutineScope {
-                val podcastsDeferred = async(Dispatchers.IO) {
-                    runCatching {
-                        podcastRepo.search(category)
-                    }
-                        .also { result ->
-                            Log.d("HomeViewModel", "onTabSelected: ${result.exceptionOrNull()?.message}")
-                        }
-                }
-                val videosDeferred = async(Dispatchers.IO) {
-                    runCatching { videoRepo.search(category) }
-                }
-                val articlesDeferred = async(Dispatchers.IO) {
-                    runCatching { articleRepo.searchArticles(category) }
-                }
+                val podcastsDeferred = async(Dispatchers.IO) { runCatching { podcastRepo.search(category) } }
+                val videosDeferred = async(Dispatchers.IO) { runCatching { videoRepo.search(category) } }
+                val articlesDeferred = async(Dispatchers.IO) { runCatching { articleRepo.searchArticles(category) } }
 
                 val podcastsResult = podcastsDeferred.await()
                 val videosResult = videosDeferred.await()
@@ -71,9 +77,9 @@ class HomeViewModel(
 
                 _uiState.update { state ->
                     state.copy(
-                        podcasts = podcastsResult.getOrNull().orEmpty(),
-                        videos = videosResult.getOrNull().orEmpty(),
-                        articles = articlesResult.getOrNull().orEmpty(),
+                        podcastsByTab = state.podcastsByTab + (tab to podcastsResult.getOrNull().orEmpty()),
+                        videosByTab = state.videosByTab + (tab to videosResult.getOrNull().orEmpty()),
+                        articlesByTab = state.articlesByTab + (tab to articlesResult.getOrNull().orEmpty()),
                         loading = false,
                         error = errorGlobal
                     )
@@ -81,5 +87,6 @@ class HomeViewModel(
             }
         }
     }
+
 }
 

@@ -2,6 +2,7 @@ package com.kmobile.museointeractivo.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,12 +17,14 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.kmobile.museointeractivo.ui.theme.DeepGold
 import com.kmobile.museointeractivo.ui.theme.Desert
 import com.kmobile.museointeractivo.ui.theme.Gold
@@ -34,13 +37,14 @@ import com.kmobile.museointeractivo.ui.theme.Papyrus
 fun GenericHeroHeader(
     title: String,
     imageUrl: String?,
-    subtitle: String?
+    subtitle: String?,
+    onImageClick: (String?) -> Unit ,
 ) {
     OutlinedCard(
         colors = CardDefaults.outlinedCardColors(containerColor = Papyrus),
         border = BorderStroke(1.dp, DeepGold.copy(alpha = 0.55f)),
         shape = RoundedCornerShape(22.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Column {
             if (!imageUrl.isNullOrBlank()) {
@@ -48,11 +52,16 @@ fun GenericHeroHeader(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(190.dp)
+                        .clickable { onImageClick(imageUrl)}
                 ) {
                     CoilImages(
                         imageUrl,
                         modifier = Modifier.matchParentSize(),
-                        description = title
+                        description = title,
+                        onImageClick = { url ->
+                            android.util.Log.d("IMG", "GenericHeroHeader forwarding url=$url")
+                            onImageClick(url)
+                        }
                     )
 
                     Box(
@@ -88,9 +97,10 @@ fun GenericHeroHeader(
                 }
             }
         }
-    }
-}
 
+    }
+
+}
 @Composable
 private fun EgyptChip(text: String) {
     Surface(
@@ -134,7 +144,11 @@ fun ErrorStateCard(message: String, modifier: Modifier = Modifier) {
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Error", style = MaterialTheme.typography.titleMedium, color = Color(0xFFB3261E))
-            Text(message, style = MaterialTheme.typography.bodyMedium, color = Ink.copy(alpha = 0.88f))
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Ink.copy(alpha = 0.88f)
+            )
         }
     }
 }
@@ -155,4 +169,5 @@ fun EmptyStateCard(text: String, modifier: Modifier = Modifier) {
         )
     }
 }
+
 

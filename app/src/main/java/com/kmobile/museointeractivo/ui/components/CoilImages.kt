@@ -1,16 +1,10 @@
 package com.kmobile.museointeractivo.ui.components
 
-import android.os.SystemClock
 import android.util.Log
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -27,7 +21,8 @@ import com.kmobile.museointeractivo.R
 fun CoilImages(
     imageUrl: String?,
     modifier: Modifier = Modifier,
-    description: String? = null
+    description: String? = null,
+    onImageClick: ((String?) -> Unit)? = null,
 ) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -35,24 +30,32 @@ fun CoilImages(
     val state = rememberTransformableState { zoomChange, panChange, _ ->
         val newScale = (scale * zoomChange).coerceIn(1f, 4f)
         scale = newScale
-
         if (scale > 1f) offset += panChange else offset = Offset.Zero
     }
+
     val context = LocalContext.current
 
+    // ✅ Si no hay URL, solo muestra placeholder (y aun así permite tap si quieres)
     if (imageUrl.isNullOrBlank()) {
         AsyncImage(
             model = null,
             contentDescription = description,
-            modifier = modifier,
+            modifier = modifier.pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        Log.d("IMG", "CoilImages TAP url=$imageUrl")
+                        onImageClick?.invoke(imageUrl)
+                    }
+                )
+
+            },
             placeholder = painterResource(R.drawable.placeholder),
             error = painterResource(R.drawable.nosystem),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
         )
         return
     }
 
-    val startTime = remember(imageUrl) { SystemClock.elapsedRealtime() }
 
     val request = remember(imageUrl) {
         ImageRequest.Builder(context)
@@ -63,17 +66,6 @@ fun CoilImages(
             .networkCachePolicy(CachePolicy.ENABLED)
             .allowHardware(false)
             .size(1080, 400)
-            .listener(
-                onStart = { Log.d("IMG", "START url=$imageUrl") },
-                onSuccess = { _, _ ->
-                    val took = SystemClock.elapsedRealtime() - startTime
-                    Log.d("IMG", "SUCCESS took=${took}ms url=$imageUrl")
-                },
-                onError = { _, result ->
-                    val took = SystemClock.elapsedRealtime() - startTime
-                    Log.e("IMG", "ERROR took=${took}ms url=$imageUrl throwable=${result.throwable}")
-                }
-            )
             .build()
     }
 
@@ -81,8 +73,12 @@ fun CoilImages(
         model = request,
         contentDescription = description,
         modifier = modifier
-            .pointerInput(Unit) {
+            .pointerInput(imageUrl) {
                 detectTapGestures(
+                    onTap = {
+                        Log.d("IMG", "CoilImages TAP url=$imageUrl")
+                        onImageClick?.invoke(imageUrl)   // ✅ aquí se dispara
+                    },
                     onDoubleTap = {
                         if (scale > 1f) {
                             scale = 1f
@@ -104,4 +100,7 @@ fun CoilImages(
         placeholder = painterResource(R.drawable.placeholder),
         error = painterResource(R.drawable.nosystem),
     )
+
+
 }
+

@@ -1,6 +1,5 @@
 package com.kmobile.museointeractivo.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -46,7 +48,6 @@ fun VideoDetailScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    Log.d("VideoDetailScreen", "id: $id")
     LaunchedEffect(id) {
         viewModel.loadVideo(id)
     }
@@ -70,7 +71,6 @@ fun VideoDetailScreen(
             }
 
             is DetailState.Error -> {
-                Log.d("VideoDetailScreen", "Error: ${state.message}")
                 ErrorStateCard(
                     message = state.message ?: "Ocurrió un error",
                     modifier = Modifier
@@ -93,11 +93,17 @@ fun VideoDetailScreen(
                 val videourl = video.url
 
                 Column(modifier = Modifier.padding(16.dp)) {
+                    var viewUrl by remember{ mutableStateOf<String?>(null) }
+
                     GenericHeroHeader(
                         title = video.user.name ?: "Sin título",
                         imageUrl = video.image,
-                        subtitle = video.user.name ?: "Sin subtítulo"
+                        subtitle = video.user.name ?: "Sin subtítulo",
+                        onImageClick = {url ->
+                            viewUrl = url
+                        }
                     )
+
 
                     ElevatedCard(
                         colors = CardDefaults.elevatedCardColors(containerColor = Sand),

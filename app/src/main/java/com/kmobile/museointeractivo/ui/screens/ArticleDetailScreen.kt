@@ -1,6 +1,5 @@
 package com.kmobile.museointeractivo.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -53,7 +55,6 @@ fun ArticleDetailScreen(
 
     LaunchedEffect(id) { viewModel.loadArticle(id) }
 
-    Log.d("ArticleDetailScreen", "id = $id")
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -100,6 +101,7 @@ fun ArticleDetailScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
+                    var viewUrl by remember{ mutableStateOf<String?>(null) }
 
                     GenericHeroHeader(
                         title = article.title ?: "Sin título",
@@ -107,9 +109,13 @@ fun ArticleDetailScreen(
                         subtitle = article.tags
                             ?.mapNotNull { it.term }
                             ?.joinToString(", ")
-                            ?: "Sin etiquetas"
+                            ?: "Sin etiquetas",
+                            onImageClick = {url ->
+                                viewUrl = url
+                            }
+                        )
 
-                    )
+
                     Text(text = article.title ?: "Sin título")
                     Spacer(Modifier.height(8.dp))
 

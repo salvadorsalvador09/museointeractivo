@@ -1,22 +1,15 @@
 package com.kmobile.museointeractivo.ui.home
 
-import android.util.Log
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -36,12 +29,17 @@ import com.kmobile.museointeractivo.data.repository.PodcastRepository
 import com.kmobile.museointeractivo.data.repository.VideoRepository
 import com.kmobile.museointeractivo.ui.components.ArticleCard
 import com.kmobile.museointeractivo.ui.components.PodcastCard
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import com.kmobile.museointeractivo.data.remote.articles.ArticleDto
 import com.kmobile.museointeractivo.data.remote.podcasts.EpisodeDto
 import com.kmobile.museointeractivo.data.remote.videos.VideoDto
 import com.kmobile.museointeractivo.ui.components.VideoCard
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -50,67 +48,67 @@ fun HomeScreen(
     onPodcastClick: (Long) -> Unit,
     onVideoClick: (Int) -> Unit,
     onArticleClick: (Int) -> Unit,
+    onImageClick: (String?) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scope = rememberCoroutineScope()
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val pagerState = rememberPagerState(
+        initialPage = uiState.selectedTab.ordinal,
+        pageCount = { HomeTab.entries.size }
+    )
 
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { msg ->
-            snackbarHostState.showSnackbar(message = msg)
-        }
+    val tab = HomeTab.entries[pagerState.currentPage]
+
+    val podcasts = uiState.podcastsByTab[tab].orEmpty()
+    val videos = uiState.videosByTab[tab].orEmpty()
+    val articles = uiState.articlesByTab[tab].orEmpty()
+
+    val hasData = podcasts.isNotEmpty() || videos.isNotEmpty() || articles.isNotEmpty()
+    val showLoader = uiState.loading && !hasData
+
+    LaunchedEffect(pagerState.currentPage) {
+        val tab = HomeTab.entries[pagerState.currentPage]
+        viewModel.onTabSelected(tab)
+        onTabClick(tab)
     }
-
-    LaunchedEffect(Unit) {
-        viewModel.onTabSelected(HomeTab.ART)
-    }
-
-    val podcastsPreview = remember(uiState.podcasts) { uiState.podcasts.take(5) }
-    val videosPreview = remember(uiState.videos) { uiState.videos.take(5) }
-    val articlesPreview = remember(uiState.articles) { uiState.articles.take(5) }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Box(modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)) {
-                EgyptTabs(
-                    selectedTab = uiState.selectedTab,
-                    onTabClick = { tab ->
-                        viewModel.onTabSelected(tab)
-                        onTabClick(tab)
-                    }
-                )
-            }
+            EgyptTabs(
+                selectedTab = HomeTab.entries[pagerState.currentPage],
+                onTabClick = { tab ->
+                    scope.launch { pagerState.animateScrollToPage(tab.ordinal) }
+                }
+            )
         }
     ) { padding ->
 
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .padding(vertical = 20.dp)
-        ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.padding(padding)
+        ) { page ->
+            val tab = HomeTab.entries[page]
 
-
-            if (uiState.loading) {
+            if (showLoader) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable(enabled = true) { },
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
-            }
-            else{
+            } else {
                 HomeContent(
-                            podcastsPreview,
-                            videosPreview,
-                            articlesPreview,
-                            onPodcastClick,
-                            onVideoClick,
-                            onArticleClick
+                    podcastsPreview = podcasts.take(10),
+                    videosPreview = videos.take(10),
+                    articlesPreview = articles.take(10),
+                    onPodcastClick = onPodcastClick,
+                    onVideoClick = onVideoClick,
+                    onArticleClick = onArticleClick,
+                    onImageClick = onImageClick
                 )
             }
+
         }
     }
 }
@@ -124,16 +122,20 @@ private fun HomeContent(
     onPodcastClick: (Long) -> Unit,
     onVideoClick: (Int) -> Unit,
     onArticleClick: (Int) -> Unit,
-    ){
+    onImageClick: (String?) -> Unit,
+) {
     LazyColumn(
         verticalArrangement = spacedBy(12.dp),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
+
         item { Text("Podcasts") }
         items(podcastsPreview, key = { it.id }) { podcast ->
             PodcastCard(
                 feed = podcast,
-                onClick = { onPodcastClick(podcast.id) }
+                modifier = Modifier.padding(horizontal = 16.dp),
+                onClick = { onPodcastClick(podcast.id) },
+                onImageClick = { onImageClick(podcast.image) }
             )
         }
 
@@ -141,7 +143,9 @@ private fun HomeContent(
         items(videosPreview, key = { it.id }) { video ->
             VideoCard(
                 video = video,
-                onClick = { onVideoClick(video.id) }
+                modifier = Modifier.padding(horizontal = 16.dp),
+                onClick = { onVideoClick(video.id) },
+                onImageClick = { onImageClick(video.image) }
             )
         }
 
@@ -149,14 +153,19 @@ private fun HomeContent(
         items(articlesPreview, key = { it.objectID }) { article ->
             ArticleCard(
                 article = article,
-                onClick = { onArticleClick(article.objectID) }
+                modifier = Modifier.padding(horizontal = 16.dp),
+                onClick = { onArticleClick(article.objectID) },
+                onImageClick = { url ->
+                    android.util.Log.d("IMG", "ArticleCard forwarding url=$url")
+                    onImageClick(url)
+                }
+
             )
         }
+
+
     }
 }
-
-
-
 
 
 class HomeViewModelFactory(

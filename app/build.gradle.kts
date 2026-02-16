@@ -90,7 +90,9 @@ dependencies {
 
     //navegacion
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("net.engawapg.lib:zoomable:1.6.1")
 
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
 

@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.common.util.Log
+import android.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,6 +25,23 @@ import com.kmobile.museointeractivo.ui.VideoDetailViewModel
 import com.kmobile.museointeractivo.ui.state.ArticleDetailViewModelFactory
 import com.kmobile.museointeractivo.ui.state.PodcastDetailViewModelFactory
 import com.kmobile.museointeractivo.ui.state.VideoDetailViewModelFactory
+import android.net.Uri
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.kmobile.museointeractivo.ui.screens.ImageViewerScreen
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.unit.dp
+
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -35,57 +52,110 @@ fun AppNavGraph(
     videoRepo: VideoRepository,
     articleRepo: ArticleRepository,
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = "home"
+    Box(
+        Modifier.fillMaxSize()
+
     ) {
 
-        composable("home") {
-            val start = remember { SystemClock.elapsedRealtime() }
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(top = 12.dp),
+        ) {
 
-            LaunchedEffect(Unit) {
-                Log.d("UI-Home", "HomeScreen composed in ${SystemClock.elapsedRealtime() - start}ms")
+            composable("home") {
+                val start = remember { SystemClock.elapsedRealtime() }
+
+                LaunchedEffect(Unit) {
+                    Log.d(
+                        "UI-Home",
+                        "HomeScreen composed in ${SystemClock.elapsedRealtime() - start}ms"
+                    )
+                }
+                HomeScreen(
+                    viewModel = homeViewModel,
+                    onTabClick = { tab -> homeViewModel.onTabSelected(tab) },
+                    onPodcastClick = { id -> navController.navigate("podcast/$id") },
+                    onVideoClick = { id -> navController.navigate("video/$id") },
+                    onArticleClick = { id -> navController.navigate("article/$id") },
+                    onImageClick = { url ->
+                        Log.d("IMG", "NAV onImageClick url=$url")
+
+                        if (url.isNullOrBlank()) return@HomeScreen
+
+                        val encoded = Uri.encode(url)
+
+                        Log.d("IMG", "NAV navigating -> image?url=$encoded")
+                        navController.navigate("image?url=$encoded") {
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
-            HomeScreen(
-                viewModel = homeViewModel,
-                onTabClick = { tab -> homeViewModel.onTabSelected(tab) },
-                onPodcastClick = { id -> navController.navigate("podcast/$id") },
-                onVideoClick = { id -> navController.navigate("video/$id") },
-                onArticleClick = { id -> navController.navigate("article/$id") }
-            )
-        }
 
-        composable("podcast/{id}") { backStackEntry ->
-            val idStr = backStackEntry.arguments?.getString("id") ?: return@composable
-            val id = idStr.toLongOrNull() ?: return@composable
+            composable("podcast/{id}") { backStackEntry ->
+                val idStr = backStackEntry.arguments?.getString("id") ?: return@composable
+                val id = idStr.toLongOrNull() ?: return@composable
 
-            val detailVm: PodcastDetailViewModel = viewModel(
-                factory = PodcastDetailViewModelFactory(podcastRepo)
-            )
+                val detailVm: PodcastDetailViewModel = viewModel(
+                    factory = PodcastDetailViewModelFactory(podcastRepo)
+                )
 
-            PodcastDetailScreen(id = id, viewModel = detailVm, onBack = { navController.popBackStack() })
-        }
+                PodcastDetailScreen(
+                    id = id,
+                    viewModel = detailVm,
+                    onBack = { navController.popBackStack() })
+            }
 
-        composable("video/{id}") { backStackEntry ->
-            val idStr = backStackEntry.arguments?.getString("id") ?: return@composable
-            val id = idStr.toIntOrNull() ?: return@composable
+            composable("video/{id}") { backStackEntry ->
+                val idStr = backStackEntry.arguments?.getString("id") ?: return@composable
+                val id = idStr.toIntOrNull() ?: return@composable
 
-            val detailVm: VideoDetailViewModel = viewModel(
-                factory = VideoDetailViewModelFactory(videoRepo)
-            )
+                val detailVm: VideoDetailViewModel = viewModel(
+                    factory = VideoDetailViewModelFactory(videoRepo)
+                )
 
-            VideoDetailScreen(id = id, viewModel = detailVm, onBack = { navController.popBackStack() })
-        }
+                VideoDetailScreen(
+                    id = id,
+                    viewModel = detailVm,
+                    onBack = { navController.popBackStack() })
+            }
 
-        composable("article/{id}") { backStackEntry ->
-            val idStr = backStackEntry.arguments?.getString("id") ?: return@composable
-            val id = idStr.toIntOrNull() ?: return@composable
+            composable("article/{id}") { backStackEntry ->
+                val idStr = backStackEntry.arguments?.getString("id") ?: return@composable
+                val id = idStr.toIntOrNull() ?: return@composable
 
-            val detailVm: ArticleDetailViewModel = viewModel(
-                factory = ArticleDetailViewModelFactory(articleRepo)
-            )
+                val detailVm: ArticleDetailViewModel = viewModel(
+                    factory = ArticleDetailViewModelFactory(articleRepo)
+                )
 
-            ArticleDetailScreen(id = id, viewModel = detailVm, onBack = { navController.popBackStack() } )
+                ArticleDetailScreen(
+                    id = id,
+                    viewModel = detailVm,
+                    onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = "image?url={url}",
+                arguments = listOf(navArgument("url") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val encoded = backStackEntry.arguments?.getString("url")
+                Log.d("IMG", "IMAGE destination HIT encoded=$encoded")
+
+                if (encoded.isNullOrBlank()) return@composable
+                val url = Uri.decode(encoded)
+
+                Log.d("IMG", "IMAGE decoded url=$url")
+
+                ImageViewerScreen(
+                    imageUrl = url,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+
+
         }
     }
+
 }

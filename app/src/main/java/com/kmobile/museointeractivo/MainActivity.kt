@@ -38,8 +38,8 @@ class MainActivity : ComponentActivity() {
             val homeViewModel: HomeViewModel = viewModel(
                 factory = HomeViewModelFactory(podcastRepo, videoRepo, articleRepo)
             )
-            MuseoInteractivoTheme()
-            {
+
+            MuseoInteractivoTheme {
                 AppNavGraph(
                     navController = navController,
                     homeViewModel = homeViewModel,
@@ -49,5 +49,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+
     }
 }
