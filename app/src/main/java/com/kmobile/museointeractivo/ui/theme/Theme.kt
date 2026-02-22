@@ -1,13 +1,16 @@
 package com.kmobile.museointeractivo.ui.theme
-
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Typography
+
+val AppTypography = Typography(
+    titleLarge = Typography().titleLarge.copy(fontFamily = CinzelFont),
+    titleMedium = Typography().titleMedium.copy(fontFamily = CinzelFont),
+)
 
 
 private val LightColors = lightColorScheme(
@@ -85,7 +88,7 @@ fun MuseoInteractivoTheme(
 ) {
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColors else LightColors,
-        typography = Typography,
+        typography = AppTypography,
         content = content
     )
 }

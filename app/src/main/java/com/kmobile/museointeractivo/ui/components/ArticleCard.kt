@@ -47,7 +47,7 @@ fun ArticleCard(
                 shape = shape
             ),
         colors = CardDefaults.cardColors(containerColor = Papyrus),
-        //onClick = { onClick?.invoke() }
+        onClick = { onClick?.invoke() }
     ) {
         Column(
             modifier = Modifier

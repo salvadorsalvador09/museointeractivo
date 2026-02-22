@@ -53,7 +53,6 @@ fun EgyptVideoPlayer(
     var positionMs by remember { mutableStateOf(0L) }
     var bufferedMs by remember { mutableStateOf(0L) }
 
-    // Listener para play/pause y duración
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlayingNow: Boolean) {
@@ -68,7 +67,6 @@ fun EgyptVideoPlayer(
         onDispose { player.removeListener(listener) }
     }
 
-    // “Ticker” para ir refrescando tiempos
     LaunchedEffect(player) {
         while (true) {
             positionMs = max(0L, player.currentPosition)
@@ -99,14 +97,12 @@ fun EgyptVideoPlayer(
             }
         )
 
-        // Overlay con controles
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(overlayColor)
                 .padding(12.dp)
         ) {
-            // Botones centro: prev / play / next
             Row(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -114,10 +110,7 @@ fun EgyptVideoPlayer(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Previous “en segundo” (más pequeño)
 
-
-                // Play/Pause principal
                 BigControlButton(
                     onClick = {
                         if (player.isPlaying) player.pause() else player.play()
@@ -130,7 +123,6 @@ fun EgyptVideoPlayer(
 
             }
 
-            // Barra de progreso + tiempos (abajo)
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -166,7 +158,6 @@ fun EgyptVideoPlayer(
 
 
 
-                // Tiempos: transcurrido y restante
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -203,7 +194,6 @@ private fun BigControlButton(
             onClick = onClick,
             modifier = Modifier.size(72.dp)
         ) {
-            // Texto usado como icono (para no depender de icon packs)
             CompositionLocalProvider(LocalContentColor provides tint) { content() }
         }
     }

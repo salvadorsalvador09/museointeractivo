@@ -1,5 +1,6 @@
 package com.kmobile.museointeractivo.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.gson.Gson
 import com.kmobile.museointeractivo.ui.VideoDetailViewModel
 import com.kmobile.museointeractivo.ui.common.DetailState
 import com.kmobile.museointeractivo.ui.components.EgyptVideoPlayer
@@ -90,7 +92,8 @@ fun VideoDetailScreen(
 
             is DetailState.Success -> {
                 val video = state.data
-                val videourl = video.url
+                val videoUrl = video.videoFiles.maxByOrNull { it.height }
+                    ?.link
 
                 Column(modifier = Modifier.padding(16.dp)) {
                     var viewUrl by remember{ mutableStateOf<String?>(null) }
@@ -121,9 +124,14 @@ fun VideoDetailScreen(
                                 color = Sand
                             )
 
-                            if (!videourl.isNullOrBlank()) {
+                            val gson = Gson()
+                            val json = gson.toJson(video)
+
+                            Log.d("VIDEO_JSON", json)
+                            if (!videoUrl.isNullOrBlank()) {
+                                Log.d("VIDEOURL", videoUrl)
                                 EgyptVideoPlayer(
-                                    url = videourl,
+                                    url = videoUrl,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .aspectRatio(16 / 9f)

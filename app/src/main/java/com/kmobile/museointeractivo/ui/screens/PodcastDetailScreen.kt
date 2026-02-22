@@ -1,5 +1,6 @@
 package com.kmobile.museointeractivo.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,6 +98,7 @@ fun PodcastDetailScreen(
             is DetailState.Success -> {
                 val feed = state.data
                 val audioUrl = feed.enclosureUrl
+                Log.d("Podcast", "audioUrl=$audioUrl")
 
                 Column(
                     modifier = Modifier
@@ -132,6 +134,7 @@ fun PodcastDetailScreen(
                                 color = Nile
                             )
 
+                            Log.d("Podcast", audioUrl)
                             if (!audioUrl.isNullOrBlank()) {
                                 PodcastPlayerCard(
                                     audioUrl = audioUrl,

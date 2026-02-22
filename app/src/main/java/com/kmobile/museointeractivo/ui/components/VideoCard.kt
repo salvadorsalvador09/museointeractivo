@@ -55,7 +55,6 @@ fun VideoCard(
                 .padding(16.dp)
         ) {
 
-            // Header tipo "papyrus"
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

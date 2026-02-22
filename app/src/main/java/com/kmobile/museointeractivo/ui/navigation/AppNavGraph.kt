@@ -33,15 +33,8 @@ import androidx.navigation.navArgument
 import com.kmobile.museointeractivo.ui.screens.ImageViewerScreen
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.ui.unit.dp
-
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -62,7 +55,6 @@ fun AppNavGraph(
             startDestination = "home",
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(top = 12.dp),
         ) {
 
             composable("home") {
@@ -79,15 +71,12 @@ fun AppNavGraph(
                     onTabClick = { tab -> homeViewModel.onTabSelected(tab) },
                     onPodcastClick = { id -> navController.navigate("podcast/$id") },
                     onVideoClick = { id -> navController.navigate("video/$id") },
-                    onArticleClick = { id -> navController.navigate("article/$id") },
+                    onArticleClick = { id ->
+                        navController.navigate("article/$id")
+                        Log.d("Articulos", "NAV onArticleClick id=$id") },
                     onImageClick = { url ->
-                        Log.d("IMG", "NAV onImageClick url=$url")
-
                         if (url.isNullOrBlank()) return@HomeScreen
-
                         val encoded = Uri.encode(url)
-
-                        Log.d("IMG", "NAV navigating -> image?url=$encoded")
                         navController.navigate("image?url=$encoded") {
                             launchSingleTop = true
                         }
@@ -136,6 +125,7 @@ fun AppNavGraph(
                     viewModel = detailVm,
                     onBack = { navController.popBackStack() })
             }
+
             composable(
                 route = "image?url={url}",
                 arguments = listOf(navArgument("url") { type = NavType.StringType })

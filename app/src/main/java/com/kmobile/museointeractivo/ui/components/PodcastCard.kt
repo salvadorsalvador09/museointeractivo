@@ -13,10 +13,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -58,7 +54,7 @@ fun PodcastCard(
                 .padding(10.dp)
         ) {
             GenericHeroHeader(
-                title = feed.title ?: "Sin título",
+                title = feed.title,
                 imageUrl = feed.image,
                 subtitle = feed.datePublishedPretty,
                 onImageClick = onImageClick
@@ -67,19 +63,19 @@ fun PodcastCard(
 
 
 
-            if (!feed.datePublishedPretty.isNullOrBlank()) {
+            feed.datePublishedPretty?.takeIf { it.isNotBlank() }?.let { date ->
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = feed.datePublishedPretty,
+                    text = date,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Ink
                 )
             }
 
-            if (!feed.description.isNullOrBlank()) {
+            feed.description?.takeIf { it.isNotBlank() }?.let { desc ->
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = feed.description,
+                    text = desc,
                     style = MaterialTheme.typography.bodySmall,
                     color = Nile.copy(alpha = 0.75f),
                     maxLines = 3

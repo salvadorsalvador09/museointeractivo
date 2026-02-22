@@ -26,8 +26,6 @@ class HomeViewModel(
 
     private var tabJob: Job? = null
 
-
-
     init {
         onTabSelected(HomeTab.ART)
     }
@@ -40,24 +38,21 @@ class HomeViewModel(
                     current.videosByTab[tab]?.isNotEmpty() == true ||
                     current.articlesByTab[tab]?.isNotEmpty() == true
 
-        if (!force && current.selectedTab == tab && alreadyLoaded) {
+        if (alreadyLoaded && !force) {
+            _uiState.update { it.copy(loading = false) }
             return
         }
-
         tabJob?.cancel()
 
-        // Cambias tab inmediatamente
         _uiState.update {
             it.copy(
                 selectedTab = tab,
-                loading = !alreadyLoaded, // si ya hay cache, no pongas loading
+                loading = true, // si ya hay cache, no pongas loading
                 error = null
             )
         }
 
         // Si ya estaba cargado, no vuelvas a pedir
-        if (alreadyLoaded && !force) return
-
         tabJob = viewModelScope.launch {
             val category = tab.category
 

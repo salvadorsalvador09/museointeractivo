@@ -35,10 +35,10 @@ import com.kmobile.museointeractivo.data.remote.videos.VideoDto
 import com.kmobile.museointeractivo.ui.components.VideoCard
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import com.kmobile.museointeractivo.ui.components.EgyptSectionHeader
 import kotlinx.coroutines.launch
 
 @Composable
@@ -59,13 +59,6 @@ fun HomeScreen(
     )
 
     val tab = HomeTab.entries[pagerState.currentPage]
-
-    val podcasts = uiState.podcastsByTab[tab].orEmpty()
-    val videos = uiState.videosByTab[tab].orEmpty()
-    val articles = uiState.articlesByTab[tab].orEmpty()
-
-    val hasData = podcasts.isNotEmpty() || videos.isNotEmpty() || articles.isNotEmpty()
-    val showLoader = uiState.loading && !hasData
 
     LaunchedEffect(pagerState.currentPage) {
         val tab = HomeTab.entries[pagerState.currentPage]
@@ -88,28 +81,32 @@ fun HomeScreen(
             state = pagerState,
             modifier = Modifier.padding(padding)
         ) { page ->
-            val tab = HomeTab.entries[page]
+            val pageTab = HomeTab.entries[page]
 
-            if (showLoader) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+            val pagePodcasts = uiState.podcastsByTab[pageTab].orEmpty()
+            val pageVideos = uiState.videosByTab[pageTab].orEmpty()
+            val pageArticles = uiState.articlesByTab[pageTab].orEmpty()
+
+            val pageHasData = pagePodcasts.isNotEmpty() || pageVideos.isNotEmpty() || pageArticles.isNotEmpty()
+            val pageShowLoader = uiState.loading && !pageHasData && pageTab == HomeTab.entries[pagerState.currentPage]
+
+            if (pageShowLoader) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
             } else {
                 HomeContent(
-                    podcastsPreview = podcasts.take(10),
-                    videosPreview = videos.take(10),
-                    articlesPreview = articles.take(10),
+                    podcastsPreview = pagePodcasts.take(10),
+                    videosPreview = pageVideos.take(10),
+                    articlesPreview = pageArticles.take(10),
                     onPodcastClick = onPodcastClick,
                     onVideoClick = onVideoClick,
                     onArticleClick = onArticleClick,
                     onImageClick = onImageClick
                 )
             }
-
         }
+
     }
 }
 
@@ -129,7 +126,7 @@ private fun HomeContent(
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
 
-        item { Text("Podcasts") }
+        item { EgyptSectionHeader("Podcasts") }
         items(podcastsPreview, key = { it.id }) { podcast ->
             PodcastCard(
                 feed = podcast,
@@ -139,7 +136,7 @@ private fun HomeContent(
             )
         }
 
-        item { Text("Videos") }
+        item { EgyptSectionHeader("Videos") }
         items(videosPreview, key = { it.id }) { video ->
             VideoCard(
                 video = video,
@@ -149,16 +146,13 @@ private fun HomeContent(
             )
         }
 
-        item { Text("Artículos") }
+        item { EgyptSectionHeader("Artículos") }
         items(articlesPreview, key = { it.objectID }) { article ->
             ArticleCard(
                 article = article,
                 modifier = Modifier.padding(horizontal = 16.dp),
                 onClick = { onArticleClick(article.objectID) },
-                onImageClick = { url ->
-                    android.util.Log.d("IMG", "ArticleCard forwarding url=$url")
-                    onImageClick(url)
-                }
+                onImageClick = {onImageClick(article.primaryImage)}
 
             )
         }

@@ -15,6 +15,7 @@ import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import androidx.compose.ui.res.painterResource
+import coil.imageLoader
 import com.kmobile.museointeractivo.R
 
 @Composable
@@ -24,6 +25,9 @@ fun CoilImages(
     description: String? = null,
     onImageClick: ((String?) -> Unit)? = null,
 ) {
+
+
+
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
@@ -35,7 +39,6 @@ fun CoilImages(
 
     val context = LocalContext.current
 
-    // ✅ Si no hay URL, solo muestra placeholder (y aun así permite tap si quieres)
     if (imageUrl.isNullOrBlank()) {
         AsyncImage(
             model = null,
@@ -74,10 +77,20 @@ fun CoilImages(
         contentDescription = description,
         modifier = modifier
             .pointerInput(imageUrl) {
+                val ctx = context
+                val loader = ctx.imageLoader
                 detectTapGestures(
                     onTap = {
-                        Log.d("IMG", "CoilImages TAP url=$imageUrl")
-                        onImageClick?.invoke(imageUrl)   // ✅ aquí se dispara
+                    loader.enqueue(
+                        ImageRequest.Builder(ctx)
+                            .data(imageUrl)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .networkCachePolicy(CachePolicy.ENABLED)
+                            .size(1080, 400)
+                            .build()
+                    )
+                        onImageClick?.invoke(imageUrl)
                     },
                     onDoubleTap = {
                         if (scale > 1f) {
